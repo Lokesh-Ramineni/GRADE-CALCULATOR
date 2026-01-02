@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=delete" />
+</head>
+<body>
+    <header id="header" class="header">
+        <h1><i style="margin-right: 5px;" class="fa-solid fa-graduation-cap"></i>GRADE CALCULATOR</h1>
+        <div class="menu" onclick="toogle()">☰</div>
+    </header>
+    <nav class="nav">
+        <div class="close" style="box-shadow: none;" onclick="toogleun()"><i class="fa-solid fa-x"></i></div>
+        <div class="trans" onclick="openGPA()">GPA</div>
+        <div class="trans" onclick="openCGPA()" >CGPA</div>
+        <div class="trans" onclick="openESTIMATE()">ESTIMATE</div>
+    </nav>
+    <main class="page_content">
+    <div id="section" class=" main gpa">
+            <h2>GPA CALCULATOR</h2>
+            <div class="container">
+                <div class="header-section">
+                    <h2>Semester Courses</h2>
+                    <p>Add your courses with credits and grades to calculate your GPA</p>
+                </div>
+                <div class="one course-section">
+                    <div class="enter template">
+                        <input type="text" class="course-name color" placeholder="Course Name">
+                        <input type="number" class="course-credits color" placeholder="Credits">
+                        <select name="grade" class="course-grade color">
+                            <option class="color" value="" disabled selected hidden>Grade</option>
+                            <option value="s">S</option>
+                            <option value="a">A</option>
+                            <option value="b">B</option>
+                            <option value="c">C</option>
+                            <option value="d">D</option>
+                            <option value="e">E</option>
+                            <option value="f">F</option>
+                        </select>
+                        <div class="dontdelete color"><i class="fa-solid fa-trash"></i></div>
+                    </div>
+                </div>
+                
+                <div class ="footer-gpa">
+                    <div class="action">
+                        <button class="styles add-course" onclick="addcourse()">Add Course</button>
+                        <button class="styles" onclick="resetgpa()" >Reset</button>
+                        <button class="styles calculate-gpa" onclick="CalculateGPA()">Calculate GPA</button>
+                        <div class="output-section">
+                            <h3 class="gpa-result">Your GPA: 0.00</span></h3>
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>   
+    </div>
+    <div class="main cgpa">
+        <div class="container">
+                <h2>CGPA CALCULATOR</h2>
+        <div class="header-section">
+                <h2>Semester Details</h2>
+                <p>Enter credits and GPA for each semester</p>
+        </div>
+        <div class="semesters-section one">
+            <div class="enter news">
+                <input type="text" id="extra" class="sem-name color" placeholder="Semester Name">
+                <input type="number" id="extra" class="sem-credits color " placeholder="Credits">
+                <input type="number" id="extra" class=" sem-gpa color " placeholder="GPA">
+                <div class="dontdelete1"><i class="fa-solid fa-trash"></i></div>
+            </div>
+        </div>
+        <div class ="footer-gpa">
+            <div class="action">
+                <button class="add-sem styles" onclick="addsemester()">Add Semester</button>
+                <button class="styles" onclick="resetgpa()" >Reset</button>
+                <button class="styles calculate-gpa" onclick="calculateCGPA()">Calculate CGPA</button>
+                <div class="output-section">
+                    <h3 class="cgpa-result">Your CGPA:0.00</span></h3>
+                </div>      
+            </div>
+        </div>
+        </div>
+    </div>
+    <div class="main Estimate">
+        <div class="current-status">
+            <h2>Current status</h2>
+            <p>Enter your current academic standing</p>
+            <div>
+                <div class="current-cgpa same">
+                    <label for="two">Current CGPA</label>
+                    <input id="two" class="inputs" type="number" placeholder="eg,. 7.50">
+                </div>
+                <div class="current-credits same">
+                    <label for="three">Credits Completed</label>
+                    <input id="three" class="inputs" type="number" placeholder="eg,. 120">
+                </div>
+            </div>
+        </div>
+        <div>
+            <h2>Target Goals</h2>
+            <p>Set your target CGPA and upcoming semester credits</p> 
+            <div>
+                <div class="target-cgpa same">
+                    <label for="four">Taregt GPA </label>
+                    <input id="four" class="inputs" class="number" placeholder="eg,. 8.00">
+                </div>
+                <div class="upcoming-credits same">
+                    <label for="five">Upcoming Credits</label>
+                    <input id="five" class="inputs" type="number" placeholder="eg,. 23">
+                </div>
+            </div>
+        </div>
+        <div >
+            <div class="footer-estimate">
+                <button class="styles estimate" onclick="calculateEstimate()" >Estimate</button>
+                <button class="styles reset" onclick="reset()" >Reset</button>
+                <div class="output-section" >
+                    <h3 class="cgpa-estimate">Required CGPA:_ _</span></h3>
+                </div>
+            </div>
+        </div>
+        <br><br>
+    </div>
+    <br><br>
+    <footer class="footer">
+        <div>
+            <h3 style="margin-bottom: 0; color:#8892b0 ;" >Designed by</h3>
+            <p style="margin-top: 0;">Lokesh R</p>
+        </div>
+        <div>
+            <a href=""><i class="fa-brands fa-linkedin-in"></i></a>
+        </div>
+        <div>
+            <a href="https://github.com/Lokesh-Ramineni" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i></a>
+        </div>
+        <div>
+            <a href="mailto:lokesh.ramineni1@gmail.com"><i class="fa-solid fa-envelope"></i></a>
+        </div>
+    </footer>
+    </main>
+    
+    <script src="app.js"></script>
+</body>
+</html>
