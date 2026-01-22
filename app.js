@@ -107,7 +107,7 @@ let calculateGPA = function() {
     let creditsarray = [];
     let gradesarray = [];
     for(let i=0;i<course_credits.length;i++){
-        creditsarray.push(Number(course_credits[i].value));
+        creditsarray.push(Math.abs(Number(course_credits[i].value)))    ;
         gradesarray.push(course_grades[i].value);
     }
     console.log(creditsarray);
@@ -154,8 +154,8 @@ let calculatecgpa=function(){
     let creditsarray=[];
     let gpaarray=[];
     for(let i=0;i<semcredits.length;i++){
-        creditsarray.push(Number(semcredits[i].value));
-        gpaarray.push(Number(semgpa[i].value));
+        creditsarray.push(Math.abs(Number(semcredits[i].value)));
+        gpaarray.push(Math.abs(Number(semgpa[i].value)));
     }
     let sum=0;
     let credits=0;
@@ -166,15 +166,15 @@ let calculatecgpa=function(){
     return (sum/credits).toFixed(2);
 }
 let calculateESTIMATE= function(){
-    let currentsemgpa=Number(document.getElementById('two').value);
-    let currentsemcredits=Number(document.getElementById('three').value);
-    let targetcgpa=Number(document.getElementById('four').value);
-    let upcomingcredits=Number(document.getElementById('five').value);
+    let currentsemgpa=Math.abs(Number(document.getElementById('two').value));
+    let currentsemcredits=Math.abs(Number(document.getElementById('three').value));
+    let targetcgpa=Math.abs(Number(document.getElementById('four').value));
+    let upcomingcredits=Math.abs(Number(document.getElementById('five').value));
     return ((targetcgpa*(upcomingcredits + currentsemcredits) - currentsemgpa*currentsemcredits)/upcomingcredits).toFixed(2);
 }
 // Reset
 let reset =function(){
-     let currentsemgpa=document.getElementById('two');
+    let currentsemgpa=document.getElementById('two');
     let currentsemcredits=document.getElementById('three');
     let targetcgpa=document.getElementById('four');
     let upcomingcredits=document.getElementById('five');
@@ -192,6 +192,12 @@ let resetgpa=function(){
         select.value='';
     })
 }
+let resetcgpa=function(){
+    let toreset=document.querySelector('.semesters-section');
+    toreset.querySelectorAll('input').forEach((input) => {
+        input.value='';
+    })
+};
 // Display GPA,CGPA
 let CalculateGPA = function() {
     //let gpa_result = document.getElementsByClassName('calculate-gpa')[0];
