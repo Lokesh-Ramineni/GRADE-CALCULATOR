@@ -232,5 +232,18 @@ let calculateEstimate = function(){
     }
    
 }
+// Responsive Placeholder gpa,cgpa
+function updateCoursePlaceholder() {
+  const w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+
+  document.querySelectorAll('.course-name').forEach(input => {
+    input.placeholder = w < 550 ? 'Course' : 'Course Name';
+  });
+  document.querySelectorAll('.sem-name').forEach(input => {
+    input.placeholder = w < 550 ? 'Semester' : 'Semester Name';
+  });
+}
+window.addEventListener('DOMContentLoaded', updateCoursePlaceholder);
+window.addEventListener('resize', updateCoursePlaceholder);
 
 
