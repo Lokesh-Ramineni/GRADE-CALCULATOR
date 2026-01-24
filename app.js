@@ -240,7 +240,7 @@ function updateCoursePlaceholder() {
     input.placeholder = w < 550 ? 'Course' : 'Course Name';
   });
   document.querySelectorAll('.sem-name').forEach(input => {
-    input.placeholder = w < 550 ? 'Semester' : 'Semester Name';
+    input.placeholder = w < 1261 ? 'Semester' : 'Semester Name';
   });
 }
 window.addEventListener('DOMContentLoaded', updateCoursePlaceholder);
