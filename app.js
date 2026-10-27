@@ -1,249 +1,244 @@
-let openGPA = function() {
-    let gpaSection = document.querySelector('.main.gpa');
-    gpaSection.id="section";
-    let cgpaSection=document.querySelector('.main.cgpa');
-    cgpaSection.id='';  
-    let estimatesection=document.querySelector('.main.Estimate');
-    estimatesection.id='';
-    localStorage.setItem('activeSection', 'gpa');
-}
-let openCGPA = function() {
-    let gpaSection = document.querySelector('.main.cgpa');
-    gpaSection.id="section";
-    let gpasection=document.querySelector('.main.gpa');
-    gpasection.id='';
-    let estimatesection=document.querySelector('.main.Estimate');
-    estimatesection.id='';
-    localStorage.setItem('activeSection', 'cgpa');
+const MAX_GPA = 10;
+const GRADE_POINTS = { s: 10, a: 9, b: 8, c: 7, d: 6, e: 5, f: 0 };
 
+function parseNum(value) {
+    if (value === '' || value === null || value === undefined) return NaN;
+    return Number(value);
 }
-let openESTIMATE=function(){
-    let estimatesection=document.querySelector('.main.Estimate');
-    estimatesection.id='section';
-    let cgpasection=document.querySelector('.main.cgpa')
-    cgpasection.id='';
-    let gpasection=document.querySelector('.main.gpa');
-    gpasection.id='';
-    localStorage.setItem('activeSection', 'Estimate');
+
+const fmt = (n) => n.toFixed(2);
+
+function computeGPA(courses) {
+    let points = 0, credits = 0;
+    const invalid = [];
+    courses.forEach((c, i) => {
+        const cr = parseNum(c.credits);
+        const hasGrade = c.grade !== '' && c.grade !== undefined;
+        if (Number.isNaN(cr) && !hasGrade) return;                
+        if (!(cr > 0) || !(c.grade in GRADE_POINTS)) { invalid.push(i); return; }
+        points += cr * GRADE_POINTS[c.grade];
+        credits += cr;
+    });
+    return { gpa: credits > 0 ? points / credits : null, credits, invalid };
 }
-// Initial Setup && local storage
-document.addEventListener('DOMContentLoaded', () => {
-    const activeSection = localStorage.getItem('activeSection');
-    addcourse();   // 👈 adds the first course row automatically
-    if (activeSection === 'cgpa') {
-        openCGPA();
+
+function computeCGPA(semesters) {
+    let points = 0, credits = 0;
+    const invalid = [];
+    semesters.forEach((s, i) => {
+        const cr = parseNum(s.credits);
+        const g = parseNum(s.gpa);
+        if (Number.isNaN(cr) && Number.isNaN(g)) return;           
+        if (!(cr > 0) || Number.isNaN(g) || g < 0 || g > MAX_GPA) { invalid.push(i); return; }
+        points += cr * g;
+        credits += cr;
+    });
+    return { cgpa: credits > 0 ? points / credits : null, credits, invalid };
+}
+
+function computeEstimate({ current, done, target, upcoming }) {
+    const cur = parseNum(current), d = parseNum(done);
+    const t = parseNum(target), up = parseNum(upcoming);
+    if ([cur, d, t, up].some(Number.isNaN)) return { status: 'invalid', reason: 'Fill in all four fields.' };
+    if (cur < 0 || cur > MAX_GPA || t < 0 || t > MAX_GPA) {
+        return { status: 'invalid', reason: `CGPA values must be between 0 and ${MAX_GPA}.` };
     }
-    else if(activeSection === 'gpa'){
-        openGPA();
+    if (d < 0) return { status: 'invalid', reason: 'Credits completed cannot be negative.' };
+    if (!(up > 0)) return { status: 'invalid', reason: 'Upcoming credits must be greater than 0.' };
+
+    const required = (t * (d + up) - cur * d) / up;
+    if (required <= 0) return { status: 'secured', required: 0 };
+
+    const rounded = Math.ceil(required * 100 - 1e-9) / 100;
+    if (rounded > MAX_GPA) {
+        return { status: 'unreachable', required: rounded, best: (cur * d + MAX_GPA * up) / (d + up) };
     }
-    else{
-        openESTIMATE();
+    return { status: 'ok', required: rounded };
+}
+
+if (typeof module !== 'undefined') {
+    module.exports = { computeGPA, computeCGPA, computeEstimate, parseNum };
+}
+
+if (typeof document !== 'undefined') {
+(function () {
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+    const TABS = ['gpa', 'cgpa', 'estimate'];
+    const nav = $('#nav'), menuBtn = $('#menu-btn'), scrim = $('#scrim');
+
+    function showTab(name) {
+        if (!TABS.includes(name)) name = 'gpa';
+        TABS.forEach((t) => {
+            const active = t === name;
+            $('#panel-' + t).hidden = !active;
+            const tab = $('#tab-' + t);
+            tab.setAttribute('aria-selected', String(active));
+            tab.tabIndex = active ? 0 : -1;
+        });
+        try { localStorage.setItem('activeSection', name); } catch (e) { /* storage unavailable */ }
     }
 
-});
-
-//side nav bar
-function toogle() {
-    const nav = document.querySelector('.nav');
-    nav.classList.add('active');
-}
-function toogleun() {
-    const nav = document.querySelector('.nav');
-    nav.classList.remove('active');
-}
-
-// Add Functionality
-let toreset=[];
-let addcourse = function() {
-        let courseContainer = document.querySelector('.course-section');
-        let newCourse = document.querySelector('.enter.template');
-        let newcourse1=newCourse.cloneNode(true);
-        newcourse1.classList.remove('template');
-        newcourse1.querySelector('.course-name').value = '';
-        newcourse1.querySelector('.course-credits').value = '';
-        newcourse1.querySelector('.course-grade').value = '';
-        let deleteBtn = document.querySelector('.dontdelete');
-        deleteBtn.classList.add('delete');
-        newCourse.classList.add('resets');
-        courseContainer.appendChild(newcourse1);
-        toreset.push(1);
-        console.log(toreset);
-}
-
-let addsemester = function() {
-    let courseContainer = document.querySelector('.semesters-section');
-    let newsem = document.querySelector('.enter.news');
-    let newsem1=newsem.cloneNode(true);
-    newsem1.classList.remove('news');
-    newsem1.querySelector('.sem-name').value = '';
-    newsem1.querySelector('.sem-credits').value = '';
-    newsem1.querySelector('.sem-gpa').value = '';
-    newsem1.querySelector('.dontdelete1').classList.add('delete1');
-    courseContainer.appendChild(newsem1); 
-}
-// Delete Functionality
-const courseSection = document.querySelector('.course-section');
-    courseSection.addEventListener('click', function (event) {
-    if (event.target.closest('.delete')) {
-        event.target.closest('.enter').remove();
+    function setDrawer(open) {
+        nav.classList.toggle('open', open);
+        scrim.hidden = !open;
+        menuBtn.setAttribute('aria-expanded', String(open));
     }
-});
-const semestersSection = document.querySelector('.semesters-section');
-    semestersSection.addEventListener('click', function (event) {
-        //const deleteBtn = event.target.closest('.delete1');
-        if(event.target.closest('.delete1'  ) ){
-            event.target.closest('.enter').remove();
-        }
+
+    $$('.tab').forEach((tab) => {
+        tab.addEventListener('click', () => { showTab(tab.dataset.tab); setDrawer(false); });
+        tab.addEventListener('keydown', (e) => {
+            const i = TABS.indexOf(tab.dataset.tab);
+            let next = null;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') next = TABS[(i + 1) % TABS.length];
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') next = TABS[(i + TABS.length - 1) % TABS.length];
+            if (next) { e.preventDefault(); showTab(next); $('#tab-' + next).focus(); }
+        });
+    });
+    menuBtn.addEventListener('click', () => setDrawer(true));
+    $('#nav-close').addEventListener('click', () => { setDrawer(false); menuBtn.focus(); });
+    scrim.addEventListener('click', () => setDrawer(false));
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setDrawer(false); });
+
+    const courseRows = $('#course-rows'), semRows = $('#sem-rows');
+
+    function addRow(container, templateId, focus = true) {
+        const row = $(templateId).content.firstElementChild.cloneNode(true);
+        container.appendChild(row);
+        if (focus) $('input', row).focus();
+        return row;
+    }
+
+    function clearRow(row) {
+        $$('input', row).forEach((i) => { i.value = ''; });
+        $$('select', row).forEach((s) => { s.value = ''; });
+        row.classList.remove('invalid');
+    }
+
+    function removeRow(container, row, templateId) {
+        if (container.children.length <= 1) { clearRow(row); return; }  
+        row.remove();
+    }
+
+    [[courseRows, '#course-template'], [semRows, '#sem-template']].forEach(([container, tpl]) => {
+        container.addEventListener('click', (e) => {
+            const btn = e.target.closest('.remove');
+            if (btn) removeRow(container, btn.closest('.row'), tpl);
+        });
         
-});
-// if (!deleteBtn) return; // Exit if the clicked element is not a delete button
-//             const row=event.target.closest('.enter');
-//             if(!row) return; // Exit if no row found
-//             row.remove();
-// GPA Calculation
-let calculateGPA = function() {
-    let course_credits=document.querySelectorAll('.course-credits');
-    let course_grades=document.querySelectorAll('.course-grade');
-    let creditsarray = [];
-    let gradesarray = [];
-    for(let i=0;i<course_credits.length;i++){
-        creditsarray.push(Math.abs(Number(course_credits[i].value)))    ;
-        gradesarray.push(course_grades[i].value);
+        container.addEventListener('input', (e) => e.target.closest('.row')?.classList.remove('invalid'));
+        container.addEventListener('change', (e) => e.target.closest('.row')?.classList.remove('invalid'));
+    });
+
+    function setResult(prefix, value, note = '', state = '') {
+        $('#' + prefix + '-value').textContent = value;
+        const n = $('#' + prefix + '-note');
+        n.textContent = note;
+        n.className = 'result-note' + (state ? ' ' + state : '');
     }
-    console.log(creditsarray);
-    console.log(gradesarray);
-    let pointsarray = [];
-    let sum = 0;
-    let totalCredits = 0;
-    function gradeToPoint() {
-        for(let i=0;i<gradesarray.length;i++){
-            if(gradesarray[i]==='s'){
-                pointsarray.push(10);
-            }
-            else if(gradesarray[i]=='a'){
-                pointsarray.push(9);
-            }
-            else if(gradesarray[i]=='b'){
-                pointsarray.push(8);
-            }
-            else if(gradesarray[i]=='c'){
-                pointsarray.push(7);
-            }
-            else if(gradesarray[i]=='d'){
-                pointsarray.push(6);
-            }
-            else if(gradesarray[i]=='e'){
-                pointsarray.push(5);
-            }
-            else if(gradesarray[i]=='f'){
-                pointsarray.push(0);
-            }
-            else{
-                pointsarray.push(0);
-            }
-            sum += creditsarray[i] * pointsarray[i];
-            totalCredits += creditsarray[i];
+
+    function markInvalid(rows, indices) {
+        rows.forEach((r, i) => r.classList.toggle('invalid', indices.includes(i)));
+    }
+
+    const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+    // ----- GPA -----
+    function calcGPA() {
+        const rows = $$('.row', courseRows);
+        const data = rows.map((r) => ({
+            credits: $('.course-credits', r).value,
+            grade: $('.course-grade', r).value,
+        }));
+        const { gpa, credits, invalid } = computeGPA(data);
+        markInvalid(rows, invalid);
+        const skipped = invalid.length
+            ? `${plural(invalid.length, 'row')} skipped: each course needs credits above 0 and a grade.` : '';
+        if (gpa === null) {
+            setResult('gpa', '—', skipped || 'Add at least one course with credits and a grade.', invalid.length ? 'warn' : '');
+            return;
         }
-        return (sum / totalCredits).toFixed(2);
+        setResult('gpa', fmt(gpa), `${credits} credits${skipped ? ' · ' + skipped : ''}`, invalid.length ? 'warn' : '');
     }
-    return gradeToPoint();
-}
-let calculatecgpa=function(){
-    let semcredits=document.querySelectorAll('.sem-credits');
-    let semgpa=document.querySelectorAll('.sem-gpa');
-    let creditsarray=[];
-    let gpaarray=[];
-    for(let i=0;i<semcredits.length;i++){
-        creditsarray.push(Math.abs(Number(semcredits[i].value)));
-        gpaarray.push(Math.abs(Number(semgpa[i].value)));
-    }
-    let sum=0;
-    let credits=0;
-    for(let i=0;i<semcredits.length;i++){
-        sum+=creditsarray[i]*gpaarray[i];
-        credits+=creditsarray[i];
-    }
-    return (sum/credits).toFixed(2);
-}
-let calculateESTIMATE= function(){
-    let currentsemgpa=Math.abs(Number(document.getElementById('two').value));
-    let currentsemcredits=Math.abs(Number(document.getElementById('three').value));
-    let targetcgpa=Math.abs(Number(document.getElementById('four').value));
-    let upcomingcredits=Math.abs(Number(document.getElementById('five').value));
-    return ((targetcgpa*(upcomingcredits + currentsemcredits) - currentsemgpa*currentsemcredits)/upcomingcredits).toFixed(2);
-}
-// Reset
-let reset =function(){
-    let currentsemgpa=document.getElementById('two');
-    let currentsemcredits=document.getElementById('three');
-    let targetcgpa=document.getElementById('four');
-    let upcomingcredits=document.getElementById('five');
-    currentsemgpa.value='';
-    currentsemcredits.value='';
-    targetcgpa.value='';
-    upcomingcredits.value='';
-}
-let resetgpa=function(){
-    let newcourse1=document.querySelector('.course-section');
-    newcourse1.querySelectorAll('input').forEach((input) =>{
-        input.value='';
-    })
-    newcourse1.querySelectorAll('select').forEach(select =>{
-        select.value='';
-    })
-}
-let resetcgpa=function(){
-    let toreset=document.querySelector('.semesters-section');
-    toreset.querySelectorAll('input').forEach((input) => {
-        input.value='';
-    })
-};
-// Display GPA,CGPA
-let CalculateGPA = function() {
-    //let gpa_result = document.getElementsByClassName('calculate-gpa')[0];
-    let displayGPA =calculateGPA();
-    let heading = document.querySelector('.gpa-result');
-    if(displayGPA!="NaN"){
-        heading.innerText = "Your GPA: " +displayGPA;
-    }  
-    else{
-        heading.innerText = "Your GPA: 0.00";
-    }   
-}
 
-let calculateCGPA=function(){
-    let displayCgpa=calculatecgpa();
-    let heading=document.querySelector(".cgpa-result");
-    if(displayCgpa!=NaN){
-        heading.innerText=`Your CGPA: ${displayCgpa}`;
+    function resetGPA() {
+        courseRows.innerHTML = '';
+        addRow(courseRows, '#course-template', false);
+        setResult('gpa', '—');
     }
-    else{
-        heading.innerText = "Your CGPA: 0.00";
-    }
-}
-let calculateEstimate = function(){
-    let estimate=document.querySelector('.cgpa-estimate');
-    let check=calculateESTIMATE();
-    if(check <= 10){
-        estimate.innerText=`Required CGPA: ${check}`;
-    }
-    else{
-        estimate.innerText=`You missed,try next time`;
-    }
-   
-}
-// Responsive Placeholder gpa,cgpa
-function updateCoursePlaceholder() {
-  const w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
 
-  document.querySelectorAll('.course-name').forEach(input => {
-    input.placeholder = w < 550 ? 'Course' : 'Course Name';
-  });
-  document.querySelectorAll('.sem-name').forEach(input => {
-    input.placeholder = w < 1261 ? 'Semester' : 'Semester Name';
-  });
+    // ----- CGPA -----
+    function calcCGPA() {
+        const rows = $$('.row', semRows);
+        const data = rows.map((r) => ({
+            credits: $('.sem-credits', r).value,
+            gpa: $('.sem-gpa', r).value,
+        }));
+        const { cgpa, credits, invalid } = computeCGPA(data);
+        markInvalid(rows, invalid);
+        const skipped = invalid.length
+            ? `${plural(invalid.length, 'row')} skipped: each semester needs credits above 0 and a GPA from 0 to ${MAX_GPA}.` : '';
+        if (cgpa === null) {
+            setResult('cgpa', '—', skipped || 'Add at least one semester with credits and a GPA.', invalid.length ? 'warn' : '');
+            return;
+        }
+        setResult('cgpa', fmt(cgpa), `${credits} credits${skipped ? ' · ' + skipped : ''}`, invalid.length ? 'warn' : '');
+    }
+
+    function resetCGPA() {
+        semRows.innerHTML = '';
+        addRow(semRows, '#sem-template', false);
+        setResult('cgpa', '—');
+    }
+
+    const est = {
+        current: $('#est-cgpa'), done: $('#est-done'),
+        target: $('#est-target'), upcoming: $('#est-upcoming'),
+    };
+
+    function calcEstimate() {
+        const r = computeEstimate({
+            current: est.current.value, done: est.done.value,
+            target: est.target.value, upcoming: est.upcoming.value,
+        });
+        switch (r.status) {
+            case 'invalid':
+                setResult('est', '—', r.reason, 'warn'); break;
+            case 'secured':
+                setResult('est', '0.00', 'Target already secured: even a 0.00 next semester keeps you at or above it.'); break;
+            case 'unreachable':
+                setResult('est', fmt(r.required),
+                    `Not reachable next semester. A perfect ${MAX_GPA}.00 would give you ${fmt(r.best)}.`, 'warn'); break;
+            default:
+                setResult('est', fmt(r.required), 'Minimum GPA needed across your upcoming credits.');
+        }
+    }
+
+    function resetEstimate() {
+        Object.values(est).forEach((i) => { i.value = ''; });
+        setResult('est', '—');
+    }
+
+    $('#add-course').addEventListener('click', () => addRow(courseRows, '#course-template'));
+    $('#add-sem').addEventListener('click', () => addRow(semRows, '#sem-template'));
+    $('#calc-gpa').addEventListener('click', calcGPA);
+    $('#calc-cgpa').addEventListener('click', calcCGPA);
+    $('#calc-est').addEventListener('click', calcEstimate);
+    $('#reset-gpa').addEventListener('click', resetGPA);
+    $('#reset-cgpa').addEventListener('click', resetCGPA);
+    $('#reset-est').addEventListener('click', resetEstimate);
+
+    [['#panel-gpa', calcGPA], ['#panel-cgpa', calcCGPA], ['#panel-estimate', calcEstimate]].forEach(([sel, fn]) => {
+        $(sel).addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); fn(); }
+        });
+    });
+
+    addRow(courseRows, '#course-template', false);
+    addRow(semRows, '#sem-template', false);
+    let saved = 'gpa';
+    try { saved = (localStorage.getItem('activeSection') || 'gpa').toLowerCase(); } catch (e) { /* ignore */ }
+    showTab(saved);
+})();
 }
-window.addEventListener('DOMContentLoaded', updateCoursePlaceholder);
-window.addEventListener('resize', updateCoursePlaceholder);
-
-
